@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets: never commit these. Use GitHub Secrets for anything in CI.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+
+# Local scratch and caches (state that belongs in git lives in data/state/)
+.DS_Store
+data/cache/
+scratch/
