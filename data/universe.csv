@@ -1,0 +1,26 @@
+# Seed universe (v1 pipeline test). Non-financial large caps across regions.
+# Grow toward ~300-500 once the pipeline is proven. Banks/insurers excluded.
+symbol,name
+AAPL,Apple
+MSFT,Microsoft
+JNJ,Johnson & Johnson
+XOM,Exxon Mobil
+PG,Procter & Gamble
+KO,Coca-Cola
+NESN.SW,Nestle
+RO.SW,Roche
+ASML.AS,ASML
+SAP.DE,SAP
+SIE.DE,Siemens
+MC.PA,LVMH
+SHEL.L,Shell
+AZN.L,AstraZeneca
+NOVO-B.CO,Novo Nordisk
+EQNR.OL,Equinor
+7203.T,Toyota
+9984.T,SoftBank Group
+6501.T,Hitachi
+005930.KS,Samsung Electronics
+0700.HK,Tencent
+BHP.AX,BHP
+CNQ.TO,Canadian Natural Resources

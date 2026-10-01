@@ -3,7 +3,7 @@ name = "portfolio-lab"
 version = "0.1.0"
 description = "Paper-trading learning platform: a global quality+value portfolio of at most 8 stocks."
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["pandas", "yfinance"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
