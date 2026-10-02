@@ -16,6 +16,7 @@ MINOR_UNITS = {"GBp": ("GBP", 100.0), "GBX": ("GBP", 100.0), "ZAc": ("ZAR", 100.
 
 CACHE_DIR = Path(__file__).resolve().parents[3] / "data" / "cache"
 CACHE_MAX_AGE_S = 20 * 3600  # refresh roughly daily
+MIN_DIRECT_FX_ROWS = 250  # about a year; fewer means Yahoo has a stub, not a real series
 
 
 def normalize_currency(ccy: str | None) -> tuple[str | None, float]:
@@ -72,7 +73,26 @@ class YahooSource:
 
     @staticmethod
     def _fetch_fx(currency: str) -> pd.Series:
-        hist = yf.Ticker(f"{currency}NOK=X").history(period="max")
-        s = hist["Close"].copy()
-        s.index = s.index.tz_localize(None).normalize()
-        return s
+        direct = _close_series(f"{currency}NOK=X")
+        if direct is not None and len(direct) >= MIN_DIRECT_FX_ROWS:
+            return direct
+        # No usable direct pair (KRWNOK doesn't exist; HKDNOK returns one row): go through USD.
+        usd_nok = _close_series("USDNOK=X")
+        usd_ccy = _close_series(f"USD{currency}=X")
+        if usd_nok is None or usd_ccy is None:
+            raise ValueError(f"no FX rate available for {currency}->NOK")
+        return cross_rate(usd_nok, usd_ccy)
+
+
+def _close_series(symbol: str) -> pd.Series | None:
+    hist = yf.Ticker(symbol).history(period="max")
+    if hist.empty:
+        return None
+    s = hist["Close"].copy()
+    s.index = s.index.tz_localize(None).normalize()
+    return s
+
+
+def cross_rate(usd_nok: pd.Series, usd_ccy: pd.Series) -> pd.Series:
+    """NOK per 1 unit of ccy, from NOK-per-USD and ccy-per-USD."""
+    return (usd_nok / usd_ccy).dropna()

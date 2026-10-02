@@ -49,3 +49,24 @@ def check_stock(data: StockData, today: pd.Timestamp | None = None) -> list[str]
             if df is None or df.empty or row not in df.index or df.loc[row].notna().sum() == 0:
                 flags.append(f"missing {row}")
     return flags
+
+
+MAX_FX_DAILY_MOVE = 0.15  # real G10/Asia moves are far smaller; bigger means bad data
+
+
+def check_fx(rates: pd.Series, today: pd.Timestamp | None = None) -> list[str]:
+    """Problems with an FX series (NOK per unit of a currency); empty means usable."""
+    today = today or pd.Timestamp.today().normalize()
+    if rates.empty:
+        return ["no FX rates"]
+    flags: list[str] = []
+    if (rates.index[-1] - rates.index[0]).days / 365 < MIN_PRICE_YEARS:
+        flags.append("less than 1 year of FX history")
+    if (today - rates.index[-1]).days > MAX_STALE_DAYS:
+        flags.append(f"FX stale (last {rates.index[-1].date()})")
+    if (rates <= 0).any():
+        flags.append("non-positive FX rate")
+    recent = rates.loc[rates.index >= today - pd.DateOffset(years=JUMP_CHECK_YEARS)]
+    if recent.pct_change().abs().max() > MAX_FX_DAILY_MOVE:
+        flags.append("suspicious one-day FX jump")
+    return flags

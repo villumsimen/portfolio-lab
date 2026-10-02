@@ -2,6 +2,13 @@
 
 What happened and what we learned. Newest first.
 
+## 2026-10-01: Phase 1 data layer, live checks
+
+- Seed universe of 23 non-financial stocks in 10 countries: all pass the quality checks.
+- Free Yahoo history contains **old glitches** (stock prices 1997-2010, FX 2008-2010, e.g. JPY flipping between 0.06 and 6.4 on alternate days). Checks look at the last 5 years only, since that is all we score on.
+- **FX needs care:** KRW/NOK doesn't exist on Yahoo, and HKD/NOK returns a single row. A pair must have about a year of history, otherwise we compute it via USD (NOK per KRW = USDNOK / USDKRW). All 10 currencies now load with full history.
+- Lesson: "the data exists" is not the same as "the data is usable". Check length and plausibility, not just presence.
+
 ## 2026-10-01: Data probe (17 global stocks, free Yahoo via yfinance)
 
 - Prices: 20-65 years, current, dividends included, for all 17. Sector, country and currency labels present.

@@ -2,8 +2,8 @@ import pandas as pd
 import pytest
 
 from portfolio_lab.data.base import StockData
-from portfolio_lab.data.quality import REQUIRED, check_stock
-from portfolio_lab.data.yahoo import normalize_currency
+from portfolio_lab.data.quality import REQUIRED, check_fx, check_stock
+from portfolio_lab.data.yahoo import cross_rate, normalize_currency
 from portfolio_lab.universe import is_excluded_sector, load_universe
 
 TODAY = pd.Timestamp("2026-10-01")
@@ -79,3 +79,26 @@ def test_duplicate_symbols_rejected(tmp_path):
     f.write_text("symbol,name\nA,a\nA,again\n")
     with pytest.raises(ValueError):
         load_universe(f)
+
+
+def test_cross_rate_goes_through_usd():
+    idx = pd.bdate_range("2026-01-01", periods=3)
+    usd_nok = pd.Series(10.0, index=idx)
+    usd_krw = pd.Series(1000.0, index=idx)
+    assert cross_rate(usd_nok, usd_krw).iloc[-1] == pytest.approx(0.01)  # NOK per KRW
+
+
+def test_fx_checks():
+    idx = pd.bdate_range("2025-01-01", "2026-10-01")
+    ok = pd.Series(10.0, index=idx)
+    assert check_fx(ok, today=TODAY) == []
+    spike = ok.copy()
+    spike.iloc[-3] = 90.0
+    assert "suspicious one-day FX jump" in check_fx(spike, today=TODAY)
+    assert "no FX rates" in check_fx(pd.Series(dtype=float), today=TODAY)
+    assert any("stale" in f for f in check_fx(ok.loc[:"2026-08-01"], today=TODAY))
+
+
+def test_stub_fx_series_is_flagged():
+    one_row = pd.Series([1.22], index=[pd.Timestamp("2026-10-01")])
+    assert "less than 1 year of FX history" in check_fx(one_row, today=TODAY)
